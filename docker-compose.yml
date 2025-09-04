@@ -1,0 +1,52 @@
+services:
+  db:
+    images: postgres:15
+    container_name: fitness-tracker_postgres
+    environment:
+      POSTGRES_DB: fitness_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "5432:5432"
+    volumes:
+      - fitness_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - fitness_network
+  
+  
+  pgadmin:
+    images: dpage/pgadmin4:latest
+    container_name: fitness_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+    networks:
+      - fitness_network
+  
+
+  app:
+    build: .
+    container_name: fitness_webapp
+    ports:
+      - "8501:8501"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://admin:password@db:5432/fitness_db
+    networks:
+      - fitness_network
+  
+
+volumes:
+  fitness_data:
+
+
+networks:
+  fitness_network:
+    driver: bridge
